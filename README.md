@@ -10,6 +10,8 @@ All memoized functions live in `lib/cached.ts` (module scope) so they can be sha
 
 <img width="1172" height="455" alt="image" src="https://github.com/user-attachments/assets/8e58189f-df19-4905-add5-a8c30876e5cc" />
 
+<img width="1175" height="682" alt="image" src="https://github.com/user-attachments/assets/95ce70dc-e128-4389-8368-a55aa40309b0" />
+
 <img width="1170" height="559" alt="image" src="https://github.com/user-attachments/assets/53d12f0e-b8f0-4e8e-b381-e0622f9902c7" />
 
 ### 2.1. Cache an expensive computation (sync)

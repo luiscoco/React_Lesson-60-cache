@@ -51,6 +51,8 @@ export const getUserProfile = cache(async (userId: string) => {
 // -------------------------------------------------------
 // 2.3 Preload data
 // -------------------------------------------------------
+// Memoized async work stores the promise; non-awaited calls prime the cache.
+// Later awaited calls reuse the same promise state (pending/fulfilled/rejected).
 export const getReport = cache(async (reportId: string) => {
   console.log("[getReport] RUN", { reportId });
 
@@ -76,3 +78,5 @@ export const getByObject = cache(async (query: { userId: string }) => {
   console.log("[getByObject] RUN", query);
   return { userId: query.userId, at: Date.now() };
 });
+
+

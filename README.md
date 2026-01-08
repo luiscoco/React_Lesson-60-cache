@@ -1,12 +1,18 @@
-# React `cache()` playground (React 19.2 + RSC)
+# React 19.2 - Lesson 60 - cache()
 
 Tiny repo to experiment with **Lesson 60 - `cache`**, using **React 19.2.x** in a **React Server Components** environment (Next.js App Router).
 
-## Features (with code)
+## 1.  Features (with code)
 
 All memoized functions live in `lib/cached.ts` (module scope) so they can be shared across components.
 
-### 1) Cache an expensive computation (sync)
+<img width="1413" height="774" alt="image" src="https://github.com/user-attachments/assets/3575ea85-80e1-4d96-bd4d-8a9a7e3ff16a" />
+
+<img width="1172" height="455" alt="image" src="https://github.com/user-attachments/assets/8e58189f-df19-4905-add5-a8c30876e5cc" />
+
+<img width="1170" height="559" alt="image" src="https://github.com/user-attachments/assets/53d12f0e-b8f0-4e8e-b381-e0622f9902c7" />
+
+### 2.1. Cache an expensive computation (sync)
 
 ```ts
 export const computePricingModel = cache((companyId: string, tier: "basic" | "pro") => {
@@ -26,7 +32,7 @@ const modelA = computePricingModel(companyId, tier);
 const modelB = computePricingModel(companyId, tier); // cache hit
 ```
 
-### 2) Share a snapshot of data (cached async fetch)
+### 2.2. Share a snapshot of data (cached async fetch)
 
 ```ts
 export const getUserProfile = cache(async (userId: string) => {
@@ -47,7 +53,7 @@ const userHeader = await getUserProfile("1");
 const userSidebar = await getUserProfile("1"); // cache hit
 ```
 
-### 3) Preload data (prime the cache)
+### 2.3. Preload data (prime the cache)
 
 ```ts
 export const getReport = cache(async (reportId: string) => { /* ... */ });
@@ -63,7 +69,7 @@ preloadReport(reportId);
 const report = await getReport(reportId);
 ```
 
-### 4) Troubleshooting: object identity pitfall
+## 4. Troubleshooting: object identity pitfall
 
 ```ts
 export const getByObject = cache(async (query: { userId: string }) => {
@@ -163,7 +169,7 @@ export const getPricing = cache(async (companyId: string) => {
 });
 ```
 
-## How to run
+## 5. How to run
 
 ```bash
 npm install
@@ -175,7 +181,7 @@ Then open:
 - Home: http://localhost:3000
 - Preload demo: http://localhost:3000/preload
 
-## File-by-file purpose
+## 6. File-by-file purpose
 
 - `app/layout.tsx`: App Router root layout, shared header/nav/footer, and metadata.
 - `app/page.tsx`: Home page showing cache examples for sync compute, cached fetch, and object identity pitfall.
@@ -194,13 +200,13 @@ Then open:
 - `.next/`: Next.js build output (generated).
 - `node_modules/`: Installed dependencies (generated).
 
-## Notes
+## 7. Notes
 
 - `cache()` is intended for **Server Components**. This repo uses Next.js App Router to run RSC.
 - React's server cache is **per request**. Reloading the page triggers a new server request, so you'll see fresh timestamps.
 - Watch the terminal logs (`RUN`) to see when work is executed vs served from cache within the same request.
 
-## Versions
+## 8. Versions
 
 - React: 19.2.3
 - Next.js: 15.2.0

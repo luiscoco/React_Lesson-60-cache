@@ -81,6 +81,88 @@ const obj1 = await getByObject(q1);
 const obj2 = await getByObject(q2); // likely MISS
 ```
 
+## 3. Deep Dive
+
+### 3.1. Caching asynchronous work
+
+Memoizing asynchronous work means the cache stores the promise representing that work. The promise tracks whether the work is pending, fulfilled, or failed. When the memoized function is first invoked, the promise is created and stored. Future lookups return the same promise, ensuring that multiple parts of the application reference the same in-progress or completed result.
+A non-awaited call merely initiates the work and stores the promise. A later awaited call retrieves the same promise, waiting only if the operation has not yet completed. If the promise has already been fulfilled or rejected, the awaited call resolves immediately with the final outcome.
+
+```ts
+export const getReport = cache(async (reportId: string) => {
+  console.log("[getReport] RUN", { reportId });
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${reportId}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch report ${reportId}: ${res.status}`);
+  return (await res.json()) as { id: number; title: string; body: string };
+});
+
+export function preloadReport(reportId: string) {
+  // Prime the cache with the in-flight promise.
+  void getReport(reportId);
+}
+```
+
+```tsx
+preloadReport(reportId); // kick off work (stores promise)
+const report = await getReport(reportId); // awaits same promise
+```
+
+### 3.2. Pitfall
+
+Calling a memoized function outside of a component will not use the cache.
+React exposes the cache through a context accessible only to components. If the memoized function is called outside the component tree, it will still perform the work but will not use or update the cache. To benefit from memoization, the function must be called within a component during rendering.
+
+```ts
+// lib/outside.ts
+import { getUserProfile } from "./cached";
+
+// This runs outside the component tree, so it bypasses the cache context.
+export const profilePromise = getUserProfile("1");
+```
+
+```tsx
+// app/page.tsx
+import { getUserProfile } from "../lib/cached";
+
+export default async function Page() {
+  const profile = await getUserProfile("1"); // cached (RSC)
+  return <pre>{JSON.stringify(profile, null, 2)}</pre>;
+}
+```
+
+### 3.3. When should I use cache, memo, or useMemo?
+
+These three APIs all involve memoization, but they target different scenarios and have distinct characteristics.
+useMemo is intended for Client Components. It caches expensive computations within a component across re-renders, but its cache is local to that component instance. It does not share cached results across different components.
+cache is intended for Server Components. It memoizes work such as data fetching or expensive calculations, and the cached results can be shared across multiple components. The cache resets for every server request.
+memo is used to prevent unnecessary component re-renders when props have not changed. It memoizes the rendered output of a component, not arbitrary computations. It only caches the most recent render.
+
+```tsx
+// Client Component example
+"use client";
+import { useMemo, memo } from "react";
+
+const ExpensiveView = memo(function ExpensiveView({ value }: { value: number }) {
+  return <div>{value}</div>;
+});
+
+export function ClientExample({ n }: { n: number }) {
+  const squared = useMemo(() => n * n, [n]); // component-local memo
+  return <ExpensiveView value={squared} />; // memo prevents rerender if props unchanged
+}
+```
+
+```ts
+// Server Component example
+import { cache } from "react";
+
+export const getPricing = cache(async (companyId: string) => {
+  return { companyId, fetchedAt: new Date().toISOString() };
+});
+```
+
 ## How to run
 
 ```bash
@@ -97,9 +179,11 @@ Then open:
 
 - `app/layout.tsx`: App Router root layout, shared header/nav/footer, and metadata.
 - `app/page.tsx`: Home page showing cache examples for sync compute, cached fetch, and object identity pitfall.
+- `app/client-demo.tsx`: Client Component demo for `useMemo` and `memo`.
 - `app/preload/page.tsx`: Preload demo that primes a cached fetch before awaiting it.
 - `app/globals.css`: Global styles for layout, cards, and typography.
 - `lib/cached.ts`: All `cache()` examples and helpers (compute, fetch, preload, pitfall).
+- `lib/outside.ts`: Module-scope call to illustrate the "outside component" cache pitfall.
 - `package.json`: Dependencies and npm scripts for Next.js.
 - `package-lock.json`: Locked dependency tree for reproducible installs.
 - `next.config.mjs`: Next.js configuration (empty default export).

@@ -1,4 +1,6 @@
+import ClientMemoDemo from "./client-demo";
 import { computePricingModel, getUserProfile, getByObject } from "../lib/cached";
+import { outsideProfilePromise } from "../lib/outside";
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -18,11 +20,14 @@ export default async function Page() {
   const modelA = computePricingModel(companyId, tier);
   const modelB = computePricingModel(companyId, tier); // cache hit
 
-  // 2.2 — cached fetch (promise shared)
+  // 2.2 - cached fetch (promise shared)
   const userHeader = await getUserProfile("1");
   const userSidebar = await getUserProfile("1"); // cache hit
 
-  // 4C — object identity pitfall
+  // 3.2 - outside component call (module scope)
+  const outsideProfile = await outsideProfilePromise;
+
+  // 4C - object identity pitfall
   const q1 = { userId: "1" };
   const q2 = { userId: "1" };
   const obj1 = await getByObject(q1);
@@ -50,7 +55,7 @@ export default async function Page() {
       <Card title="2.2 Share a snapshot of data (cached fetch)">
         <p>
           Two components (or call sites) awaiting <code>getUserProfile('1')</code> share the same in-flight promise and result.
-          The JSON includes a <code>fetchedAt</code> timestamp so you can see it’s the same data snapshot.
+          The JSON includes a <code>fetchedAt</code> timestamp so you can see it's the same data snapshot.
         </p>
         <div className="row">
           <div style={{ flex: 1, minWidth: 280 }}>
@@ -64,7 +69,32 @@ export default async function Page() {
         </div>
       </Card>
 
-      <Card title="4. Troubleshooting — non-primitive args (object identity)">
+      <Card title="3.2 Pitfall - calling cache() outside a component">
+        <p>
+          The cache context is only available during Server Component rendering. A call made at module load time happens outside
+          that context and will not use or update the per-request cache.
+        </p>
+        <div className="row">
+          <div style={{ flex: 1, minWidth: 280 }}>
+            <h3 style={{ marginBottom: 6 }}>Outside component (module scope)</h3>
+            <pre>{JSON.stringify(outsideProfile, null, 2)}</pre>
+          </div>
+          <div style={{ flex: 1, minWidth: 280 }}>
+            <h3 style={{ marginBottom: 6 }}>Inside component (RSC)</h3>
+            <pre>{JSON.stringify(userHeader, null, 2)}</pre>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="3.3 cache vs memo vs useMemo (Client Component)">
+        <p>
+          <code>useMemo</code> caches computations per component instance, while <code>memo</code> skips child re-renders if props
+          do not change. Click the buttons and watch the console log for <code>ExpensiveView</code>.
+        </p>
+        <ClientMemoDemo />
+      </Card>
+
+      <Card title="4. Troubleshooting - non-primitive args (object identity)">
         <p>
           React cache keys use shallow equality. Two objects with identical contents are not equal unless they are the same reference.
           So <code>{`{ userId: "1" }`}</code> created twice usually results in two cache entries.

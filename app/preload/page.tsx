@@ -22,7 +22,7 @@ export default async function PreloadPage() {
 
   return (
     <main>
-      <Card title="2.3 Preload data">
+      <Card title="3.1 Caching asynchronous work (preload)">
         <p>
           <code>preloadReport(id)</code> triggers <code>getReport(id)</code> early (without awaiting). Later, awaiting{" "}
           <code>getReport(id)</code> reuses the same promise/result.

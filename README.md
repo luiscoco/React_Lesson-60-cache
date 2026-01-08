@@ -1,12 +1,18 @@
-# React `cache()` playground (React 19.2 + RSC)
+# React 19.2 - Lesson 60 - cache()
 
 Tiny repo to experiment with **Lesson 60 - `cache`**, using **React 19.2.x** in a **React Server Components** environment (Next.js App Router).
 
-## Features (with code)
+## 1.  Features (with code)
 
 All memoized functions live in `lib/cached.ts` (module scope) so they can be shared across components.
 
-### 1) Cache an expensive computation (sync)
+<img width="1413" height="774" alt="image" src="https://github.com/user-attachments/assets/3575ea85-80e1-4d96-bd4d-8a9a7e3ff16a" />
+
+<img width="1172" height="455" alt="image" src="https://github.com/user-attachments/assets/8e58189f-df19-4905-add5-a8c30876e5cc" />
+
+<img width="1170" height="559" alt="image" src="https://github.com/user-attachments/assets/53d12f0e-b8f0-4e8e-b381-e0622f9902c7" />
+
+### 2.1. Cache an expensive computation (sync)
 
 ```ts
 export const computePricingModel = cache((companyId: string, tier: "basic" | "pro") => {

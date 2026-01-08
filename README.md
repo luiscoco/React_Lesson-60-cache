@@ -69,24 +69,6 @@ preloadReport(reportId);
 const report = await getReport(reportId);
 ```
 
-## 4. Troubleshooting: object identity pitfall
-
-```ts
-export const getByObject = cache(async (query: { userId: string }) => {
-  console.log("[getByObject] RUN", query);
-  return { userId: query.userId, at: Date.now() };
-});
-```
-
-In `app/page.tsx`, two objects with identical content are different references, so they usually miss the cache:
-
-```tsx
-const q1 = { userId: "1" };
-const q2 = { userId: "1" };
-const obj1 = await getByObject(q1);
-const obj2 = await getByObject(q2); // likely MISS
-```
-
 ## 3. Deep Dive
 
 ### 3.1. Caching asynchronous work
@@ -167,6 +149,24 @@ import { cache } from "react";
 export const getPricing = cache(async (companyId: string) => {
   return { companyId, fetchedAt: new Date().toISOString() };
 });
+```
+
+## 4. Troubleshooting: object identity pitfall
+
+```ts
+export const getByObject = cache(async (query: { userId: string }) => {
+  console.log("[getByObject] RUN", query);
+  return { userId: query.userId, at: Date.now() };
+});
+```
+
+In `app/page.tsx`, two objects with identical content are different references, so they usually miss the cache:
+
+```tsx
+const q1 = { userId: "1" };
+const q2 = { userId: "1" };
+const obj1 = await getByObject(q1);
+const obj2 = await getByObject(q2); // likely MISS
 ```
 
 ## 5. How to run
